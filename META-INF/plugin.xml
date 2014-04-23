@@ -22,7 +22,7 @@
   -->
 
   <extensions defaultExtensionNs="com.intellij">
-    <inspectionToolProvider implementation="com.dpogretskiy.ObjectAddStringProvider"/>
+    <inspectionToolProvider implementation="com.dpogretskiy.IspectionsProvider"/>
   </extensions>
 
   <application-components>
