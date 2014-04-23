@@ -23,10 +23,22 @@ class FileLengthCall extends BaseJavaLocalInspectionTool {
     override def visitMethodCallExpression(exp: PsiMethodCallExpression) {
       super.visitMethodCallExpression(exp)
 
-      val instanceIsFile = exp.getMethodExpression.getQualifierExpression.getType.getCanonicalText == "java.io.File"
+      val instanceIsFile: Boolean = {
+        val me = exp.getMethodExpression
+        if (me != null) {
+          val qe = me.getQualifierExpression
+          if (qe != null) {
+            val `type` = qe.getType
+            if (`type` != null) {
+              `type`.getCanonicalText == "java.io.File"
+            } else false
+          } else false
+        } else false
+      }
+
       val method = exp.getMethodExpression.getLastChild
       method match {
-        case x: PsiIdentifier if x.getText == "length" && instanceIsFile =>
+        case x: PsiIdentifier if instanceIsFile && x.getText == "length" =>
           holder.registerProblem(exp, s"Trying to call length() on java.lang.File instance")
         case _ =>
       }
