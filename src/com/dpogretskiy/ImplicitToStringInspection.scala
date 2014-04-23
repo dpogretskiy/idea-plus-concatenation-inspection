@@ -31,6 +31,20 @@ class ImplicitToStringInspection extends BaseJavaLocalInspectionTool {
         }")
       }
     }
+
+    /*override def visitBinaryExpression(exp: PsiBinaryExpression) {
+      super.visitBinaryExpression(exp)
+      if (exp.getOperationTokenType == JavaTokenType.PLUS) {
+        val l = exp.getLOperand
+        val r = exp.getROperand
+        if (r != null && (isString(l) || isString(r)) && (!isString(l) || !isString(r)))
+          holder.registerProblem(exp, s"Implicit toString conversion of ${
+            if (!isString(l)) Option(l.getType).map(_.getCanonicalText).getOrElse("null")
+            else Option(r.getType).map(_.getCanonicalText).getOrElse("null")
+          }")
+      }
+    }*/
+
   }
 
   override def isEnabledByDefault = true
