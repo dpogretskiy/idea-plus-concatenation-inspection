@@ -17,14 +17,17 @@ class ImplicitToStringInspection extends BaseJavaLocalInspectionTool {
   override def getGroupDisplayName = GroupNames.BUGS_GROUP_NAME
 
   @NotNull
-  override def getShortName = "Implicit toString inspection"
+  override def getShortName = "ImplicitToString"
 
   @NotNull
   override def buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor = new JavaElementVisitor {
     override def visitPolyadicExpression(exp: PsiPolyadicExpression) {
       super.visitPolyadicExpression(exp)
-      if (exp.getOperationTokenType == JavaTokenType.PLUS && exp.getOperands.exists(isString) && exp.getOperands.exists(x => !isString(x))) {
-        val suspiciousExpressions = exp.getOperands.filterNot(isString)
+      if (exp.getOperationTokenType == JavaTokenType.PLUS
+        && exp.getOperands.exists(x => isString(x) || isPrimitiveType(x))
+        && exp.getOperands.exists(x => !isString(x)
+        && !isPrimitiveType(x))) {
+        val suspiciousExpressions = exp.getOperands.filter(x => !isString(x) && !isPrimitiveType(x))
         holder.registerProblem(exp, s"Implicit toString conversion of ${
           suspiciousExpressions.map(x => Option(x.getType)
             .map(_.getPresentableText).getOrElse("null")).mkString(", ")
@@ -44,10 +47,14 @@ class ImplicitToStringInspection extends BaseJavaLocalInspectionTool {
           }")
       }
     }*/
-
   }
 
   override def isEnabledByDefault = true
+
+  private def isPrimitiveType(expr: PsiExpression): Boolean = {
+    val `type` = expr.getType
+    `type` != null && `type`.isInstanceOf[PsiPrimitiveType]
+  }
 
   private def isString(expr: PsiExpression) = {
     val `type` = expr.getType
