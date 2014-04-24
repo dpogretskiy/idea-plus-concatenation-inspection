@@ -1,4 +1,4 @@
-package com.dpogretskiy
+package com.dpogretskiy.inspections
 
 import com.intellij.codeInspection.{ProblemsHolder, BaseJavaLocalInspectionTool}
 import com.intellij.openapi.diagnostic.Logger
@@ -7,7 +7,7 @@ import com.intellij.codeInsight.daemon.GroupNames
 import com.intellij.psi._
 
 class FileLengthCall extends BaseJavaLocalInspectionTool {
-  lazy val log = Logger.getInstance("#com.dpogretskiy.FileLengthCall")
+  lazy val log = Logger.getInstance("#com.dpogretskiy.ExceptionToString")
 
   @NotNull
   override def getDisplayName = "Suspicious length() on File instance"
@@ -20,28 +20,21 @@ class FileLengthCall extends BaseJavaLocalInspectionTool {
 
   @NotNull
   override def buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean): PsiElementVisitor = new JavaElementVisitor {
-    override def visitMethodCallExpression(exp: PsiMethodCallExpression) {
-      super.visitMethodCallExpression(exp)
+    override def visitMethodCallExpression(expr: PsiMethodCallExpression) {
+      super.visitMethodCallExpression(expr)
 
-      val instanceIsFile: Boolean = {
-        val me = exp.getMethodExpression
+      lazy val instanceIsFile: Boolean = {
+        val me = expr.getMethodExpression
         if (me != null) {
           val qe = me.getQualifierExpression
           if (qe != null) {
-            val `type` = qe.getType
-            if (`type` != null) {
-              `type`.getCanonicalText == "java.io.File"
-            } else false
+            typeOfExpressionIs(qe, classOf[java.io.File])
           } else false
         } else false
       }
 
-      val method = exp.getMethodExpression.getLastChild
-      method match {
-        case x: PsiIdentifier if instanceIsFile && x.getText == "length" =>
-          holder.registerProblem(exp, s"Trying to call length() on java.lang.File instance")
-        case _ =>
-      }
+      if (methodCalledIs(expr, "length") && instanceIsFile)
+        holder.registerProblem(expr, s"Trying to call length() on java.lang.File instance")
     }
   }
 
